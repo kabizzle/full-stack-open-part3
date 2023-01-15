@@ -1,7 +1,16 @@
 const express = require('express')
+const morgan = require('morgan')
 const app = express()
 
 app.use(express.json())
+
+morgan.token('data', (request, response) => {
+  // return `{"name": ${request.body.name}, "number": ${request.body.number}}`
+  return JSON.stringify(request.body)
+})
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :data'))
+
+
 
 let persons = [
     { 
@@ -66,23 +75,46 @@ const generateId = () => {
 }
   
 app.post('/api/persons', (request, response) => {
-    const body = request.body
+  const body = request.body
 
-    if (!body.content) {
-        return response.status(400).json({ 
-        error: 'content missing' 
-        })
-    }
+  console.log(persons)
+  console.log(body)
+  console.log(request.body.name)
 
-    const person = {
-        id: generateId(),
-        name: content.name,
-        number: content.number
-    }
+  if (!body) {
+    return response.status(400).json({ 
+      error: 'content missing' 
+    })
+  }
+  if (!body.name) {
+    return response.status(400).json({ 
+      error: 'name is missing' 
+    })
+  }
+  if (!body.number) {
+    return response.status(400).json({
+      error: 'number is missing'
+    })
+  }
 
-    persons = persons.concat(person)
+  const personExists = persons.some(person => person.name === body.name)
+  
+  if (personExists) {
+    return response.status(400).json({
+      error: 'name must be unique'
+    })
+  }
 
-    response.json(person)
+  const person = {
+    id: generateId(),
+    name: body.name,
+    number: body.number
+  }
+
+  persons = persons.concat(person)
+
+  response.json(person)
+  console.log(persons)
 })
 
 const PORT = 3001
