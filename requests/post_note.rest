@@ -1,7 +1,7 @@
-POST http://localhost:3001/api/persons HTTP/1.1
+POST https://phonebook-production-8a58.up.railway.app/api/persons HTTP/1.1
 Content-Type: application/json
 
 {
-    "name": "Maria Poppendieck", 
-    "number": "39-23-6423122"
+    "name": "Mandy Poppendieck", 
+    "number": "51-546-52313"
 }
