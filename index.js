@@ -12,38 +12,41 @@ app.use(express.static('build'))
 app.use(express.json())
 
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
 
   // console.log(persons)
   console.log(body)
   console.log(request.body.name)
 
-  if (!body) {
-    return response.status(400).json({ 
-      error: 'content missing' 
-    })
-  }
-  if (!body.name) {
-    return response.status(400).json({ 
-      error: 'name is missing' 
-    })
-  }
-  if (!body.number) {
-    return response.status(400).json({
-      error: 'number is missing'
-    })
-  }
+  // if (!body) {
+  //   return response.status(400).json({ 
+  //     error: 'content missing' 
+  //   })
+  // }
+  // if (!body.name) {
+  //   return response.status(400).json({ 
+  //     error: 'name is missing' 
+  //   })
+  // }
+  // if (!body.number) {
+  //   return response.status(400).json({
+  //     error: 'number is missing'
+  //   })
+  // }
 
   const person = new Person({
     name: body.name,
     number: body.number,
   })
   
-  person.save().then( result => {
+  person.save()
+    .then( result => {
     console.log(`Added ${body.name} ${body.number} to phonebook`)
-    response.json(result)
-  })
+      response.json(result)
+    })
+  .catch(error => next(error))
+  
 })
 
 
@@ -74,7 +77,7 @@ app.get('/api/persons/:id', (request, response, next) => {
       response.status(404).end()
     }
   })
-  .catch( error => next(error))
+  .catch(error => next(error))
 })
 
 
@@ -87,7 +90,7 @@ app.put('/api/persons/:id', (request, response, next) => {
     number: number
   }
 
-  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+  Person.findByIdAndUpdate(request.params.id, person, { new: true, runValidators: true, context: 'query' })
   .then(updatedPerson => {
     response.json(updatedPerson)
   })
@@ -119,7 +122,9 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
-  } 
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
 
   next(error)
 }
